@@ -19,8 +19,6 @@ import com.mrdeun.java_analyzer.client.OpenAIClient;
 import com.mrdeun.java_analyzer.helpers.Helpers;
 import com.mrdeun.java_analyzer.workspace.WorkspaceRunner;
 
-import io.github.cdimascio.dotenv.Dotenv;
-
 @SpringBootApplication
 public class JavaAnalyzerApplication {
 	private static String targetPrompt(
@@ -63,12 +61,12 @@ public class JavaAnalyzerApplication {
 			result.put("result", err.toString());
 		}
 
-		System.out.println("STATUS: " + result.get("status"));
-		System.out.println(result.get("result"));
+		// System.out.println(result.toString());
 		if (result.get("status").equals("SOLVED")) {
-			try (FileWriter fw = new FileWriter("RESULT.md")) {
+			try (FileWriter fw = new FileWriter("RESULT.md", false)) {
 				BufferedWriter writer = new BufferedWriter(fw);
-				writer.write(result.get("result").toString());
+				writer.write(result.get("content").toString());
+				writer.close();
 			} catch (Exception e) {
 				System.err.println(e.toString());
 			}

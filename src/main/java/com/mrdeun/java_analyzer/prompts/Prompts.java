@@ -24,7 +24,7 @@ public class Prompts {
             - Solvable
             - Not Solvable
 
-            Never choose Solvable if implementation of some method is undefined
+            Never choose Solvable if implementation of some method/class is undefined
             ### OUTPUT FORMAT
             Return exactly:
             {"category":"Solvable"} OR {"category":"Not Solvable"}
