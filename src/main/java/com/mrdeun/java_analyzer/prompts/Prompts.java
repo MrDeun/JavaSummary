@@ -48,4 +48,7 @@ public class Prompts {
             If no classes are missing, return an empty array: []
                                 """;
 
+                                static public final String TEST_GENERATION = """
+                                                Write tests for the specified method. Return only the Java code block.
+                                                """; // TODO: Fill out prompt for test generation
 }

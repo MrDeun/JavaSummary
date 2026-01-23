@@ -55,7 +55,8 @@ public class JavaAnalyzerApplication {
 			result = runner.run(
 					cli.targetClass,
 					cli.targetMethod,
-					cli.signature);
+					cli.signature,
+				cli.generateTest);
 		} catch (Exception err) {
 			result.put("status", "Unexpected Failure");
 			result.put("result", err.toString());

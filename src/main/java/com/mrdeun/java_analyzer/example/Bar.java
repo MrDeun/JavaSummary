@@ -9,7 +9,7 @@ public class Bar {
         this.baz = new Baz();
     }
 
-    public String increment() {
+    public static String increment() {
         counter++;
         return counter.toString();
     }

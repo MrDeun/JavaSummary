@@ -36,7 +36,7 @@ public class WorkspaceRunner {
     public Map<String, Object> run(
             String targetClass,
             String targetMethod,
-            String signature) throws Exception {
+            String signature, boolean generateTest) throws Exception {
         String content = Helpers.loadJavaClass(targetClass);
         // Build the initial input prompt with target method information
         String initialInput = String.format("""
@@ -90,6 +90,13 @@ public class WorkspaceRunner {
                 // Generate summary
                 history.add(systemMsg(Prompts.AGENT_SUMMARY));
                 JsonNode summaryResp = openai.call("gpt-4.1", history);
+
+                if (generateTest) {
+                    history.add(systemMsg(Prompts.TEST_GENERATION));
+                    JsonNode testGenerate = openai.call("gpt-4.1", history);
+                    String testSourceCode = openai.extractText(testGenerate);
+                    System.out.println(testSourceCode);
+                }
 
                 return Map.of(
                         "status", "SOLVED",

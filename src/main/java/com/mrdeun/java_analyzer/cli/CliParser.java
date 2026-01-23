@@ -11,9 +11,10 @@ public class CliParser {
                 case "--method" -> cli.targetMethod = args[++i];
                 case "--signature" -> cli.signature = args[++i];
                 case "--project-root" -> cli.projectRoot = args[++i];
+                case "--generate-test" -> cli.generateTest = true;
             }
         }
-
+        System.out.println(cli.generateTest ? "Test Generation: ON" : "Test Generation: OFF");
         validate(cli);
         return cli;
     }

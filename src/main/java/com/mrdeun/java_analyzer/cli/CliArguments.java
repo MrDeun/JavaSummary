@@ -5,4 +5,5 @@ public class CliArguments {
     public String targetMethod;
     public String signature;
     public String projectRoot;
+    public boolean generateTest;
 }
