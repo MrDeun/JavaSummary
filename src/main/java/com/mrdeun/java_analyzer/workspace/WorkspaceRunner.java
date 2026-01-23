@@ -2,6 +2,7 @@ package com.mrdeun.java_analyzer.workspace;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -94,8 +95,17 @@ public class WorkspaceRunner {
                 if (generateTest) {
                     history.add(systemMsg(Prompts.TEST_GENERATION));
                     JsonNode testGenerate = openai.call("gpt-4.1", history);
-                    String testSourceCode = openai.extractText(testGenerate);
+                    Map<String, Object> testSourceCode = new ObjectMapper().readValue(openai.extractText(testGenerate),
+                            HashMap.class);
                     System.out.println(testSourceCode);
+                    try {
+                        Helpers.saveTestJavaClass(testSourceCode.get("fqcn").toString(),
+                        testSourceCode.get("test_code").toString());
+
+                    } catch (IOException err){
+                        System.err.println(err);
+                    }
+
                 }
 
                 return Map.of(
@@ -116,7 +126,7 @@ public class WorkspaceRunner {
                     openai.extractText(missingResp),
                     List.class);
 
-            System.out.println("Missing classes");
+            System.out.println("Missing classes: ");
             missingClasses.stream().forEach(c -> {
                 System.out.println(c);
             });
