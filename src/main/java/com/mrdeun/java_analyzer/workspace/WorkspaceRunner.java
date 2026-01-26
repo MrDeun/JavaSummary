@@ -44,9 +44,11 @@ public class WorkspaceRunner {
     public Map<String, Object> run(
             String targetClass,
             String targetMethod,
-            String signature, boolean generateTest) throws Exception {
-
-        String projectRoot = System.getProperty("user.dir");
+            String projectRoot,
+            boolean generateTest) throws Exception {
+        if (projectRoot == null) {
+            projectRoot = System.getProperty("user.dir");
+        }
         PomInfo pomInfo = PomAnalyzer.analyzePom(projectRoot);
         if (pomInfo.isEmpty()) {
             pomInfo = PomAnalyzer.analyzeGradle(projectRoot);
@@ -58,20 +60,19 @@ public class WorkspaceRunner {
                 TARGET METHOD (IMMUTABLE):
                 - Class: %s
                 - Method: %s
-                - Signature: %s
                 - Content: %s
                 Rules:
                 - Analyze ONLY this method
                 - Ignore other methods unless they are called by it
                 - Never change the target
-                """, targetClass, targetMethod != null ? targetMethod : "\"\"", signature, content);
+                """, targetClass, targetMethod != null ? targetMethod : "\"\"", content);
 
         WorkspaceState state = new WorkspaceState();
         state.javaFiles.add(initialInput);
-            if(!pomInfo.isEmpty()){
-                String dependencyReport = PomAnalyzer.generateLibraryInfoReport(pomInfo);
-                state.javaFiles.add(dependencyReport);
-            }
+        if (!pomInfo.isEmpty()) {
+            String dependencyReport = PomAnalyzer.generateLibraryInfoReport(pomInfo);
+            state.javaFiles.add(dependencyReport);
+        }
         final int MAX_ITERATIONS = 10;
         List<String> unresolved = new ArrayList<>();
 
@@ -86,12 +87,12 @@ public class WorkspaceRunner {
 
             // ---- JAVA ANALYZER ----
             history.add(systemMsg(Prompts.JAVA_ANALYZER));
-            JsonNode javaAnalyzerResp = openai.call("gpt-4.1", history);
+            JsonNode javaAnalyzerResp = openai.call(history);
             history.add(userMsg(openai.extractText(javaAnalyzerResp)));
 
             // ---- AGENT (dependency lookup) ----
             history.add(systemMsg(Prompts.AGENT));
-            JsonNode agentResp = openai.call("gpt-4.1", history);
+            JsonNode agentResp = openai.call(history);
             String agentText = openai.extractText(agentResp);
 
             // ---- CLASSIFICATION ----
@@ -99,7 +100,7 @@ public class WorkspaceRunner {
                     systemMsg(Prompts.CLASSIFY),
                     userMsg(agentText));
 
-            JsonNode classifyResp = openai.call("gpt-4.1", classifyInput);
+            JsonNode classifyResp = openai.call(classifyInput);
             String category = openai.extractText(classifyResp);
             System.out.println(category);
 
@@ -107,11 +108,11 @@ public class WorkspaceRunner {
             if (!category.contains("Not Solvable")) {
                 // Generate summary
                 history.add(systemMsg(Prompts.AGENT_SUMMARY));
-                JsonNode summaryResp = openai.call("gpt-4.1", history);
+                JsonNode summaryResp = openai.call(history);
 
                 if (generateTest) {
                     history.add(systemMsg(Prompts.TEST_GENERATION));
-                    JsonNode testGenerate = openai.call("gpt-4.1", history);
+                    JsonNode testGenerate = openai.call(history);
                     Map<String, Object> testSourceCode = new ObjectMapper().readValue(openai.extractText(testGenerate),
                             HashMap.class);
                     System.out.println(testSourceCode);
@@ -138,7 +139,7 @@ public class WorkspaceRunner {
                     systemMsg(Prompts.EXTRACT_MISSING),
                     userMsg(agentText));
 
-            JsonNode missingResp = openai.call("gpt-4.1", extractInput);
+            JsonNode missingResp = openai.call(extractInput);
             List<String> missingClasses = new ObjectMapper().readValue(
                     openai.extractText(missingResp),
                     List.class);

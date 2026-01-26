@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
@@ -39,14 +40,16 @@ public class JavaAnalyzerApplication {
 				""".formatted(clazz, method, signature);
 	}
 
+	@Value("analyzer.summary_file")
+	private static String summary_path;
+
 	public static void main(String[] args) throws IOException {
 		CliArguments cli = CliParser.parse(args);
 
 		if (cli.projectRoot != null) {
 			System.setProperty("user.dir", cli.projectRoot);
 		}
-		String apiKey = System.getenv("OPENAI_API_KEY");
-		OpenAIClient client = new OpenAIClient(apiKey);
+		OpenAIClient client = new OpenAIClient();
 		MavenRepositroryClient mavenClient = new MavenRepositroryClient();
 
 		WorkspaceRunner runner = new WorkspaceRunner(client, mavenClient);
@@ -55,8 +58,8 @@ public class JavaAnalyzerApplication {
 			result = runner.run(
 					cli.targetClass,
 					cli.targetMethod,
-					cli.signature,
-				cli.generateTest);
+					cli.projectRoot,
+					cli.generateTest);
 		} catch (Exception err) {
 			result.put("status", "Unexpected Failure");
 			result.put("result", err.toString());
@@ -64,7 +67,7 @@ public class JavaAnalyzerApplication {
 
 		// System.out.println(result.toString());
 		if (result.get("status").equals("SOLVED")) {
-			try (FileWriter fw = new FileWriter("RESULT.md", false)) {
+			try (FileWriter fw = new FileWriter(summary_path, false)) {
 				BufferedWriter writer = new BufferedWriter(fw);
 				writer.write(result.get("content").toString());
 				writer.close();

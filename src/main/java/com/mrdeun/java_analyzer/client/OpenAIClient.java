@@ -5,22 +5,30 @@ import java.net.http.*;
 import java.time.Duration;
 import java.util.*;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+
 import com.fasterxml.jackson.databind.*;
+
+import lombok.NoArgsConstructor;
 
 public class OpenAIClient {
     
+
+    @Value("openai.api_key")
+    private String OPENAI_API_KEY;
+
+    @Value("openai.model")
+    private String OPENAI_MODEL;
+
     private static final String OPENAI_URL = "https://api.openai.com/v1/chat/completions";
-    private final String apiKey;
     private final ObjectMapper mapper = new ObjectMapper();
     private final HttpClient client = HttpClient.newHttpClient();
 
-    public OpenAIClient(String apiKey) {
-        this.apiKey = apiKey;
-    }
 
-    public JsonNode call(String model, List<Map<String, Object>> messages) throws Exception {
+    public JsonNode call(List<Map<String, Object>> messages) throws Exception {
         Map<String, Object> body = new HashMap<>();
-        body.put("model", model);
+        body.put("model", OPENAI_MODEL);
         body.put("messages", messages);  // Changed from "input" to "messages"
         body.put("max_tokens", 4000);
         body.put("temperature", 0.1);
@@ -30,7 +38,7 @@ public class OpenAIClient {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(OPENAI_URL))
                 .timeout(Duration.ofSeconds(60))
-                .header("Authorization", "Bearer " + apiKey)
+                .header("Authorization", "Bearer " + OPENAI_API_KEY)
                 .header("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(json))
                 .build();
