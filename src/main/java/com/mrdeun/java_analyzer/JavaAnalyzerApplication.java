@@ -45,10 +45,6 @@ public class JavaAnalyzerApplication {
 
 	public static void main(String[] args) throws IOException {
 		CliArguments cli = CliParser.parse(args);
-
-		if (cli.projectRoot != null) {
-			System.setProperty("user.dir", cli.projectRoot);
-		}
 		OpenAIClient client = new OpenAIClient();
 		MavenRepositroryClient mavenClient = new MavenRepositroryClient();
 

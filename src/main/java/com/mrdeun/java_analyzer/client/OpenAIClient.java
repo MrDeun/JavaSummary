@@ -12,6 +12,7 @@ import com.fasterxml.jackson.databind.*;
 
 import lombok.NoArgsConstructor;
 
+@NoArgsConstructor
 public class OpenAIClient {
     
 
@@ -20,6 +21,15 @@ public class OpenAIClient {
 
     @Value("openai.model")
     private String OPENAI_MODEL;
+
+    @Value("openai.temperature")
+    private double TEMPERATURE;
+
+    @Value("openai.http.timeout_secs")
+    private long TIMEOUT;
+
+    @Value("openai.max_tokens")
+    private long MAX_TOKENS;
 
     private static final String OPENAI_URL = "https://api.openai.com/v1/chat/completions";
     private final ObjectMapper mapper = new ObjectMapper();
@@ -30,14 +40,14 @@ public class OpenAIClient {
         Map<String, Object> body = new HashMap<>();
         body.put("model", OPENAI_MODEL);
         body.put("messages", messages);  // Changed from "input" to "messages"
-        body.put("max_tokens", 4000);
-        body.put("temperature", 0.1);
+        body.put("max_tokens", MAX_TOKENS);
+        body.put("temperature", TEMPERATURE);
 
         String json = mapper.writeValueAsString(body);
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(OPENAI_URL))
-                .timeout(Duration.ofSeconds(60))
+                .timeout(Duration.ofSeconds(TIMEOUT))
                 .header("Authorization", "Bearer " + OPENAI_API_KEY)
                 .header("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(json))
