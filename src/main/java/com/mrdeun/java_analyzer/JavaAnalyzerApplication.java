@@ -15,6 +15,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import com.mrdeun.java_analyzer.cli.CliArguments;
 import com.mrdeun.java_analyzer.cli.CliParser;
+import com.mrdeun.java_analyzer.client.MavenRepositroryClient;
 import com.mrdeun.java_analyzer.client.OpenAIClient;
 import com.mrdeun.java_analyzer.helpers.Helpers;
 import com.mrdeun.java_analyzer.workspace.WorkspaceRunner;
@@ -46,11 +47,10 @@ public class JavaAnalyzerApplication {
 		}
 		String apiKey = System.getenv("OPENAI_API_KEY");
 		OpenAIClient client = new OpenAIClient(apiKey);
+		MavenRepositroryClient mavenClient = new MavenRepositroryClient();
 
-		WorkspaceRunner runner = new WorkspaceRunner(client);
-		Map<String, Object> result = new HashMap<String, Object>() {
-
-		};
+		WorkspaceRunner runner = new WorkspaceRunner(client, mavenClient);
+		Map<String, Object> result = new HashMap<String, Object>();
 		try {
 			result = runner.run(
 					cli.targetClass,

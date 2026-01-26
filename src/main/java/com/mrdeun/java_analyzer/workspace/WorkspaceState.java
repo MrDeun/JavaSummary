@@ -6,8 +6,9 @@ import java.util.List;
 import java.util.Set;
 
 public class WorkspaceState {
-    List<String> javaFiles = new ArrayList<>();
-    Set<String> alreadyAdded = new HashSet<>();
+    public List<String> javaFiles = new ArrayList<>();
+    public Set<String> alreadyAdded = new HashSet<>();
+    public Set<String> knownThirdPartyLibraries = new HashSet<>();
     boolean solved = false;
 
     @Override

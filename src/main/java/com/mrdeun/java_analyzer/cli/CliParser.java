@@ -20,15 +20,11 @@ public class CliParser {
     }
 
     private static void validate(CliArguments cli) {
-        if (cli.targetClass == null ||
-                cli.targetMethod == null ||
-                cli.signature == null) {
+        if (cli.targetClass == null) {
 
             throw new IllegalArgumentException("""
                     Required arguments:
                       --class <FQCN>
-                      --method <methodName>
-                      --signature <methodSignature>
                     """);
         }
     }

@@ -23,7 +23,7 @@ public class OpenAIClient {
         body.put("model", model);
         body.put("messages", messages);  // Changed from "input" to "messages"
         body.put("max_tokens", 4000);
-        body.put("temperature", 0.7);
+        body.put("temperature", 0.1);
 
         String json = mapper.writeValueAsString(body);
 

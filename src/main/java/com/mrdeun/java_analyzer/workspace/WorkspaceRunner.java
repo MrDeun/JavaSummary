@@ -10,16 +10,23 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mrdeun.java_analyzer.client.MavenRepositroryClient;
 import com.mrdeun.java_analyzer.client.OpenAIClient;
+import com.mrdeun.java_analyzer.dto.Dependency;
+import com.mrdeun.java_analyzer.dto.LibraryInfo;
+import com.mrdeun.java_analyzer.dto.PomInfo;
 import com.mrdeun.java_analyzer.helpers.Helpers;
+import com.mrdeun.java_analyzer.helpers.PomAnalyzer;
 import com.mrdeun.java_analyzer.prompts.Prompts;
 
 public class WorkspaceRunner {
 
     private final OpenAIClient openai;
+    private final MavenRepositroryClient maven;
 
-    public WorkspaceRunner(OpenAIClient openai) {
+    public WorkspaceRunner(OpenAIClient openai, MavenRepositroryClient maven) {
         this.openai = openai;
+        this.maven = maven;
     }
 
     private Map<String, Object> userMsg(String text) {
@@ -38,6 +45,13 @@ public class WorkspaceRunner {
             String targetClass,
             String targetMethod,
             String signature, boolean generateTest) throws Exception {
+
+        String projectRoot = System.getProperty("user.dir");
+        PomInfo pomInfo = PomAnalyzer.analyzePom(projectRoot);
+        if (pomInfo.isEmpty()) {
+            pomInfo = PomAnalyzer.analyzeGradle(projectRoot);
+        }
+
         String content = Helpers.loadJavaClass(targetClass);
         // Build the initial input prompt with target method information
         String initialInput = String.format("""
@@ -50,11 +64,14 @@ public class WorkspaceRunner {
                 - Analyze ONLY this method
                 - Ignore other methods unless they are called by it
                 - Never change the target
-                """, targetClass, targetMethod, signature, content);
+                """, targetClass, targetMethod != null ? targetMethod : "\"\"", signature, content);
 
         WorkspaceState state = new WorkspaceState();
         state.javaFiles.add(initialInput);
-
+            if(!pomInfo.isEmpty()){
+                String dependencyReport = PomAnalyzer.generateLibraryInfoReport(pomInfo);
+                state.javaFiles.add(dependencyReport);
+            }
         final int MAX_ITERATIONS = 10;
         List<String> unresolved = new ArrayList<>();
 
@@ -100,9 +117,9 @@ public class WorkspaceRunner {
                     System.out.println(testSourceCode);
                     try {
                         Helpers.saveTestJavaClass(testSourceCode.get("fqcn").toString(),
-                        testSourceCode.get("test_code").toString());
+                                testSourceCode.get("test_code").toString());
 
-                    } catch (IOException err){
+                    } catch (IOException err) {
                         System.err.println(err);
                     }
 
@@ -131,6 +148,7 @@ public class WorkspaceRunner {
                 System.out.println(c);
             });
             boolean addedSomething = false;
+            List<String> knownLibraries = new ArrayList<>();
             for (String missingClass : missingClasses) {
                 if (state.alreadyAdded.contains(missingClass)) {
                     continue;
@@ -152,8 +170,35 @@ public class WorkspaceRunner {
                     addedSomething = true;
 
                 } catch (IOException e) {
-                    // File truly not found → cannot solve
-                    unresolved.add(missingClass);
+                    System.out.println("Checking Maven Central for: " + missingClass);
+                    LibraryInfo libInfo = maven.lookupClass(missingClass);
+                    if (libInfo != null) {
+                        // Found in Maven - mark as known
+                        String libraryDetails = maven.getLibraryDetails(libInfo);
+
+                        String knownLibInfo = """
+                                ### THIRD-PARTY LIBRARY (KNOWN)
+                                Class: %s
+                                Status: AVAILABLE IN MAVEN CENTRAL
+
+                                %s
+
+                                **Important**: This class is from a well-known library and should be treated as AVAILABLE.
+                                Do not mark this as missing. Assume standard behavior for this library.
+                                """
+                                .formatted(missingClass, libraryDetails);
+
+                        state.javaFiles.add(knownLibInfo);
+                        state.alreadyAdded.add(missingClass);
+                        knownLibraries.add(missingClass + " (" + libInfo.getCoordinate() + ")");
+                        addedSomething = true;
+                        System.out.println("✓ Found in Maven: " + libInfo.getCoordinate());
+
+                    } else {
+                        // Truly unknown
+                        unresolved.add(missingClass);
+                        System.out.println("✗ Not found: " + missingClass);
+                    }
                 }
             }
 

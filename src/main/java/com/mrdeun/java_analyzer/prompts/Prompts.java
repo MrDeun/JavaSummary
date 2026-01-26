@@ -5,10 +5,11 @@ public class Prompts {
         static public final String JAVA_ANALYZER = """
                         You are classifier that is capable of separating a classpath of a Java class and
                         contents of the file. You also are provided what method needs to be checked.
+                        If no method was provided, all the methods of the provided class are to be checked
                         """;
 
         static public final String AGENT = """
-                        You are looking through definition of a method provided.
+                        You are looking through definition of a method(s) provided.
                         If there are classes/functions that are used and you do not know their definition,
                         firstly look them up on the internet; if not found, ask the user for more context.
                         """;
@@ -32,6 +33,7 @@ public class Prompts {
 
         static public final String AGENT_SUMMARY = """
                         Summarize what the specified method does,
+                        if there's no method specified, summarize all the methods,
                         explaining every method and class being called.
                         """;
 
@@ -50,6 +52,9 @@ public class Prompts {
 
         static public final String TEST_GENERATION = """
                         Write tests for the specified method.
+                        Create test for for class from TARGET METHOD section - nothing else
+                        If no specified method was provided, generate tests for all methods.
+                        If there are autowired objects, provide mock for them.
                         Return JSON object with FQCN and source code for the tests.
                         Example: 
                         {"fqcn":"com.example.FooTest","test_code":""}

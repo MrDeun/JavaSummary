@@ -1,13 +1,14 @@
 
 package com.mrdeun.java_analyzer.example;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
+
 public class Bar {
     private static Integer counter = 0;
+    
+    @Autowired
     private static Baz baz;
-
-    public Bar() {
-        this.baz = new Baz();
-    }
 
     public static String increment() {
         counter++;

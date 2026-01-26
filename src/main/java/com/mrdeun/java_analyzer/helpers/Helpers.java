@@ -12,6 +12,8 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.mrdeun.java_analyzer.dto.Dependency;
+
 public class Helpers {
     public static String[] packageToPath(String packageString) {
         Path base = Paths.get(System.getProperty("user.dir"),
@@ -54,7 +56,7 @@ public class Helpers {
         for (int i = 0; i < parts.length - 1; i++) {
             base = base.resolve(parts[i]);
         }
-        String className = "Test".concat(parts[parts.length - 1]).concat(".java");
+        String className = parts[parts.length - 1].concat(".java");
         var file = base.resolve(className).toFile();
         file.createNewFile();
         try (
