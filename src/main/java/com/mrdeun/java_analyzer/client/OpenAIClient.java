@@ -9,12 +9,17 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import com.fasterxml.jackson.databind.*;
+import com.mrdeun.java_analyzer.exceptions.OpenAIApiKeyIsMissingException;
 
 import lombok.NoArgsConstructor;
 
-@NoArgsConstructor
 public class OpenAIClient {
-    
+
+    public OpenAIClient() throws OpenAIApiKeyIsMissingException {
+        if (OPENAI_API_KEY.isEmpty()) {
+            throw new OpenAIApiKeyIsMissingException();
+        }
+    }
 
     @Value("openai.api_key")
     private String OPENAI_API_KEY;
@@ -35,16 +40,11 @@ public class OpenAIClient {
     private final ObjectMapper mapper = new ObjectMapper();
     private final HttpClient client = HttpClient.newHttpClient();
 
-
     public JsonNode call(List<Map<String, Object>> messages) throws Exception {
         Map<String, Object> body = new HashMap<>();
 
-        if(OPENAI_API_KEY.isEmpty()){
-            throw new Exception("OPENAI_API_KEY is empty - please set your OpenAI Api key to use analyzer!");
-        }
-
         body.put("model", OPENAI_MODEL);
-        body.put("messages", messages);  // Changed from "input" to "messages"
+        body.put("messages", messages); // Changed from "input" to "messages"
         body.put("max_tokens", MAX_TOKENS);
         body.put("temperature", TEMPERATURE);
 
@@ -69,7 +69,7 @@ public class OpenAIClient {
 
     public String extractText(JsonNode response) {
         return response
-                .at("/choices/0/message/content")  // Correct path for chat completions
+                .at("/choices/0/message/content") // Correct path for chat completions
                 .asText();
     }
 }

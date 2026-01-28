@@ -18,6 +18,7 @@ import com.mrdeun.java_analyzer.cli.CliArguments;
 import com.mrdeun.java_analyzer.cli.CliParser;
 import com.mrdeun.java_analyzer.client.MavenRepositroryClient;
 import com.mrdeun.java_analyzer.client.OpenAIClient;
+import com.mrdeun.java_analyzer.exceptions.OpenAIApiKeyIsMissingException;
 import com.mrdeun.java_analyzer.helpers.Helpers;
 import com.mrdeun.java_analyzer.workspace.WorkspaceRunner;
 
@@ -45,7 +46,13 @@ public class JavaAnalyzerApplication {
 
 	public static void main(String[] args) throws IOException {
 		CliArguments cli = CliParser.parse(args);
-		OpenAIClient client = new OpenAIClient();
+		OpenAIClient client;
+		try{
+			client = new OpenAIClient();
+		} catch (OpenAIApiKeyIsMissingException e){
+			System.out.println(e.toString());
+			return;
+		}
 		MavenRepositroryClient mavenClient = new MavenRepositroryClient();
 
 		WorkspaceRunner runner = new WorkspaceRunner(client, mavenClient);
