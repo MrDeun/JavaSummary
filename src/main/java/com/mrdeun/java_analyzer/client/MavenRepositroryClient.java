@@ -9,18 +9,23 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mrdeun.java_analyzer.dto.LibraryInfo;
 import com.mrdeun.java_analyzer.exceptions.MavenClassNotFoundException;
 
+import lombok.NoArgsConstructor;
+
+@NoArgsConstructor
+@Component
 public class MavenRepositroryClient {
     private static final String MAVEN_CENTRAL_SEARCH = "https://search.maven.org/solrsearch/select";
     private final HttpClient client = HttpClient.newHttpClient();
     private final ObjectMapper mapper = new ObjectMapper();
 
-    @Value("maven.http.timeout_secs")
+    @Value("${maven.http.timeout_secs}")
     private long TIMEOUT;
 
     private String extractPackageName(String className) {

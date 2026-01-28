@@ -21,7 +21,7 @@ public class CliParser {
     }
 
     private static void validate(CliArguments cli) {
-        if (cli.javaRoot == null) {
+        if (cli.javaRoot == null || cli.javaRoot.isEmpty()) {
             cli.javaRoot = "src/main/java";
         }
         if (cli.targetClass == null) {

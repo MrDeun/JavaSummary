@@ -7,33 +7,38 @@ import java.util.*;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.*;
 import com.mrdeun.java_analyzer.exceptions.OpenAIApiKeyIsMissingException;
 
+import jakarta.annotation.PostConstruct;
 import lombok.NoArgsConstructor;
 
+@Component
 public class OpenAIClient {
 
-    public OpenAIClient() throws OpenAIApiKeyIsMissingException {
-        if (OPENAI_API_KEY.isEmpty()) {
+    @PostConstruct
+    public void init() throws OpenAIApiKeyIsMissingException {
+        if (OPENAI_API_KEY == null || OPENAI_API_KEY.isEmpty()) {
             throw new OpenAIApiKeyIsMissingException();
         }
+        // Initialize your client here
     }
 
-    @Value("openai.api_key")
+    @Value("${openai.api_key}")
     private String OPENAI_API_KEY;
 
-    @Value("openai.model")
+    @Value("${openai.model}")
     private String OPENAI_MODEL;
 
-    @Value("openai.temperature")
+    @Value("${openai.temperature}")
     private double TEMPERATURE;
 
-    @Value("openai.http.timeout_secs")
+    @Value("${openai.http.timeout_secs}")
     private long TIMEOUT;
 
-    @Value("openai.max_tokens")
+    @Value("${openai.max_tokens}")
     private long MAX_TOKENS;
 
     private static final String OPENAI_URL = "https://api.openai.com/v1/chat/completions";

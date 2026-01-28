@@ -5,14 +5,22 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.core.env.AbstractEnvironment;
+import org.springframework.core.env.EnumerablePropertySource;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.MutablePropertySources;
 
 import com.mrdeun.java_analyzer.cli.CliArguments;
 import com.mrdeun.java_analyzer.cli.CliParser;
@@ -23,61 +31,41 @@ import com.mrdeun.java_analyzer.helpers.Helpers;
 import com.mrdeun.java_analyzer.workspace.WorkspaceRunner;
 
 @SpringBootApplication
-public class JavaAnalyzerApplication {
-	private static String targetPrompt(
-			String clazz,
-			String method,
-			String signature) {
-		return """
-				TARGET METHOD (IMMUTABLE):
-				- Class: %s
-				- Method: %s
-				- Signature: %s
-
-				Rules:
-				- Analyze ONLY this method
-				- Ignore other methods unless they are called by it
-				- Never change the target
-				""".formatted(clazz, method, signature);
-	}
-
-	@Value("analyzer.summary_file")
-	private static String summary_path;
-
-	public static void main(String[] args) throws IOException {
-		CliArguments cli = CliParser.parse(args);
-		OpenAIClient client;
-		try{
-			client = new OpenAIClient();
-		} catch (OpenAIApiKeyIsMissingException e){
-			System.out.println(e.toString());
-			return;
-		}
-		MavenRepositroryClient mavenClient = new MavenRepositroryClient();
-
-		WorkspaceRunner runner = new WorkspaceRunner(client, mavenClient);
-		Map<String, Object> result = new HashMap<String, Object>();
-		try {
-			result = runner.run(
-					cli.targetClass,
-					cli.targetMethod,
-					cli.projectRoot,
-					cli.generateTest);
-		} catch (Exception err) {
-			result.put("status", "Unexpected Failure");
-			result.put("result", err.toString());
-		}
-
-		// System.out.println(result.toString());
-		if (result.get("status").equals("SOLVED")) {
-			try (FileWriter fw = new FileWriter(summary_path, false)) {
-				BufferedWriter writer = new BufferedWriter(fw);
-				writer.write(result.get("content").toString());
-				writer.close();
-			} catch (Exception e) {
-				System.err.println(e.toString());
-			}
-		}
-	}
+public class JavaAnalyzerApplication implements CommandLineRunner {
+ @Value("${analyzer.summary_file}")
+    private String summaryPath;  // Non-static
+    
+    @Autowired
+    private OpenAIClient client;  // Let Spring inject this
+    
+    @Autowired
+    private MavenRepositroryClient mavenClient;
+    
+    public static void main(String[] args) {
+        SpringApplication.run(JavaAnalyzerApplication.class, args);
+    }
+    
+    @Override
+    public void run(String... args) throws Exception {
+        CliArguments cli = CliParser.parse(args);
+        System.out.println(cli.toString());
+        WorkspaceRunner runner = new WorkspaceRunner(client, mavenClient);
+        Map<String, Object> result = new HashMap<>();
+        
+        try {
+            result = runner.run(cli);
+        } catch (Exception err) {
+            result.put("status", "Unexpected Failure");
+            result.put("result", err.toString());
+        }
+        
+        if ("SOLVED".equals(result.get("status"))) {
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(summaryPath, false))) {
+                writer.write(result.get("content").toString());
+            } catch (Exception e) {
+                System.err.println(e.toString());
+            }
+        }
+    }
 
 }

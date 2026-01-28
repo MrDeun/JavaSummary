@@ -10,23 +10,28 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import com.mrdeun.java_analyzer.dto.Dependency;
 
 public class Helpers {
     public static String[] packageToPath(String packageString, String javaRoot) {
-        var javaPaths = javaRoot.split("\\/");
-        Path base = Paths.get(System.getProperty("user.dir"),
-                "src", "main", "java");
+        List<String> javaPaths = Arrays.asList(javaRoot.split("/"));
+        Path base = Paths.get(System.getProperty("user.dir"));
+        
+        for (var p : javaPaths) {
+            base = base.resolve(p);
+        }
 
-        String[] parts = packageString.split("/");
+        String[] parts = packageString.split("\\.");
 
         for (int i = 0; i < parts.length - 1; i++) {
             base = base.resolve(parts[i]);
         }
 
         String className = parts[parts.length - 1];
+        System.out.println("Path to java file = ".concat(base.toString()));
         return new String[] { base.toString(), className };
     }
 

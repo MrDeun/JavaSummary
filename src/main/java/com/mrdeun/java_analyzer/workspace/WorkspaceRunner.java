@@ -108,7 +108,7 @@ public class WorkspaceRunner {
                 history.add(systemMsg(Prompts.AGENT_SUMMARY));
                 JsonNode summaryResp = openai.call(history);
 
-                if (generateTest) {
+                if (cli.generateTest) {
                     history.add(systemMsg(Prompts.TEST_GENERATION));
                     JsonNode testGenerate = openai.call(history);
                     Map<String, Object> testSourceCode = new ObjectMapper().readValue(openai.extractText(testGenerate),
@@ -127,7 +127,7 @@ public class WorkspaceRunner {
                 return Map.of(
                         "status", "SOLVED",
                         "iterations", iteration,
-                        "className", targetClass,
+                        "className", cli.targetClass,
                         "content", openai.extractText(summaryResp),
                         "result", openai.extractText(summaryResp));
             }
@@ -154,7 +154,7 @@ public class WorkspaceRunner {
                 }
 
                 try {
-                    String source = Helpers.loadJavaClass(missingClass);
+                    String source = Helpers.loadJavaClass(missingClass,cli.javaRoot);
 
                     String formatted = """
                             ### JAVA FILE
