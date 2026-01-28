@@ -10,6 +10,7 @@ public class CliParser {
                 case "--class" -> cli.targetClass = args[++i];
                 case "--method" -> cli.targetMethod = args[++i];
                 case "--signature" -> cli.signature = args[++i];
+                case "--java-root" -> cli.javaRoot = args[++i];
                 case "--project-root" -> cli.projectRoot = args[++i];
                 case "--generate-test" -> cli.generateTest = true;
             }
@@ -20,8 +21,10 @@ public class CliParser {
     }
 
     private static void validate(CliArguments cli) {
+        if (cli.javaRoot == null) {
+            cli.javaRoot = "src/main/java";
+        }
         if (cli.targetClass == null) {
-
             throw new IllegalArgumentException("""
                     Required arguments:
                       --class <FQCN>

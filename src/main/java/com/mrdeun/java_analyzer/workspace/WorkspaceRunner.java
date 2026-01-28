@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mrdeun.java_analyzer.cli.CliArguments;
 import com.mrdeun.java_analyzer.client.MavenRepositroryClient;
 import com.mrdeun.java_analyzer.client.OpenAIClient;
 import com.mrdeun.java_analyzer.dto.Dependency;
@@ -42,19 +43,16 @@ public class WorkspaceRunner {
     }
 
     public Map<String, Object> run(
-            String targetClass,
-            String targetMethod,
-            String projectRoot,
-            boolean generateTest) throws Exception {
-        if (projectRoot == null) {
-            projectRoot = System.getProperty("user.dir");
+            CliArguments cli) throws Exception {
+        if (cli.projectRoot == null) {
+            cli.projectRoot = System.getProperty("user.dir");
         }
-        PomInfo pomInfo = PomAnalyzer.analyzePom(projectRoot);
+        PomInfo pomInfo = PomAnalyzer.analyzePom(cli.projectRoot);
         if (pomInfo.isEmpty()) {
-            pomInfo = PomAnalyzer.analyzeGradle(projectRoot);
+            pomInfo = PomAnalyzer.analyzeGradle(cli.projectRoot);
         }
 
-        String content = Helpers.loadJavaClass(targetClass);
+        String content = Helpers.loadJavaClass(cli.targetClass, cli.javaRoot);
         // Build the initial input prompt with target method information
         String initialInput = String.format("""
                 TARGET METHOD (IMMUTABLE):
@@ -65,7 +63,7 @@ public class WorkspaceRunner {
                 - Analyze ONLY this method
                 - Ignore other methods unless they are called by it
                 - Never change the target
-                """, targetClass, targetMethod != null ? targetMethod : "\"\"", content);
+                """, cli.targetClass, cli.targetMethod != null ? cli.targetMethod : "\"\"", content);
 
         WorkspaceState state = new WorkspaceState();
         state.javaFiles.add(initialInput);

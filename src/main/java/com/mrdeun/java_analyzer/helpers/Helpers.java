@@ -15,11 +15,12 @@ import java.util.List;
 import com.mrdeun.java_analyzer.dto.Dependency;
 
 public class Helpers {
-    public static String[] packageToPath(String packageString) {
+    public static String[] packageToPath(String packageString, String javaRoot) {
+        var javaPaths = javaRoot.split("\\/");
         Path base = Paths.get(System.getProperty("user.dir"),
                 "src", "main", "java");
 
-        String[] parts = packageString.split("\\.");
+        String[] parts = packageString.split("/");
 
         for (int i = 0; i < parts.length - 1; i++) {
             base = base.resolve(parts[i]);
@@ -44,8 +45,8 @@ public class Helpers {
     /**
      * Convenience method: fully-qualified class → Java source as String
      */
-    public static String loadJavaClass(String fqcn) throws IOException {
-        String[] parts = packageToPath(fqcn);
+    public static String loadJavaClass(String fqcn, String javaRoot) throws IOException {
+        String[] parts = packageToPath(fqcn, javaRoot);
         List<String> lines = readFile(parts[0], parts[1]);
         return String.join("\n", lines);
     }
