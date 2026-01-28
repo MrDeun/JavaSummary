@@ -5,32 +5,55 @@ import java.net.http.*;
 import java.time.Duration;
 import java.util.*;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+
 import com.fasterxml.jackson.databind.*;
+import com.mrdeun.java_analyzer.exceptions.OpenAIApiKeyIsMissingException;
+
+import lombok.NoArgsConstructor;
 
 public class OpenAIClient {
-    
+
+    public OpenAIClient() throws OpenAIApiKeyIsMissingException {
+        if (OPENAI_API_KEY.isEmpty()) {
+            throw new OpenAIApiKeyIsMissingException();
+        }
+    }
+
+    @Value("openai.api_key")
+    private String OPENAI_API_KEY;
+
+    @Value("openai.model")
+    private String OPENAI_MODEL;
+
+    @Value("openai.temperature")
+    private double TEMPERATURE;
+
+    @Value("openai.http.timeout_secs")
+    private long TIMEOUT;
+
+    @Value("openai.max_tokens")
+    private long MAX_TOKENS;
+
     private static final String OPENAI_URL = "https://api.openai.com/v1/chat/completions";
-    private final String apiKey;
     private final ObjectMapper mapper = new ObjectMapper();
     private final HttpClient client = HttpClient.newHttpClient();
 
-    public OpenAIClient(String apiKey) {
-        this.apiKey = apiKey;
-    }
-
-    public JsonNode call(String model, List<Map<String, Object>> messages) throws Exception {
+    public JsonNode call(List<Map<String, Object>> messages) throws Exception {
         Map<String, Object> body = new HashMap<>();
-        body.put("model", model);
-        body.put("messages", messages);  // Changed from "input" to "messages"
-        body.put("max_tokens", 4000);
-        body.put("temperature", 0.1);
+
+        body.put("model", OPENAI_MODEL);
+        body.put("messages", messages); // Changed from "input" to "messages"
+        body.put("max_tokens", MAX_TOKENS);
+        body.put("temperature", TEMPERATURE);
 
         String json = mapper.writeValueAsString(body);
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(OPENAI_URL))
-                .timeout(Duration.ofSeconds(60))
-                .header("Authorization", "Bearer " + apiKey)
+                .timeout(Duration.ofSeconds(TIMEOUT))
+                .header("Authorization", "Bearer " + OPENAI_API_KEY)
                 .header("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(json))
                 .build();
@@ -46,7 +69,7 @@ public class OpenAIClient {
 
     public String extractText(JsonNode response) {
         return response
-                .at("/choices/0/message/content")  // Correct path for chat completions
+                .at("/choices/0/message/content") // Correct path for chat completions
                 .asText();
     }
 }

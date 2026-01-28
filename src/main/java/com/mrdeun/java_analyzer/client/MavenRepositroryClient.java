@@ -8,6 +8,8 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 
+import org.springframework.beans.factory.annotation.Value;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mrdeun.java_analyzer.dto.LibraryInfo;
@@ -17,6 +19,9 @@ public class MavenRepositroryClient {
     private static final String MAVEN_CENTRAL_SEARCH = "https://search.maven.org/solrsearch/select";
     private final HttpClient client = HttpClient.newHttpClient();
     private final ObjectMapper mapper = new ObjectMapper();
+
+    @Value("maven.http.timeout_secs")
+    private long TIMEOUT;
 
     private String extractPackageName(String className) {
         int lastDot = className.lastIndexOf('.');
@@ -33,7 +38,7 @@ public class MavenRepositroryClient {
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(url))
-                .timeout(Duration.ofSeconds(10))
+                .timeout(Duration.ofSeconds(TIMEOUT))
                 .header("Accept", "application/json")
                 .GET()
                 .build();

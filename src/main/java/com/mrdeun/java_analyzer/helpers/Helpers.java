@@ -56,6 +56,11 @@ public class Helpers {
         for (int i = 0; i < parts.length - 1; i++) {
             base = base.resolve(parts[i]);
         }
+
+        if(Files.notExists(base)){
+            Files.createDirectories(base);
+        }
+
         String className = parts[parts.length - 1].concat(".java");
         var file = base.resolve(className).toFile();
         file.createNewFile();
