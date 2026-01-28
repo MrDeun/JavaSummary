@@ -38,6 +38,11 @@ public class OpenAIClient {
 
     public JsonNode call(List<Map<String, Object>> messages) throws Exception {
         Map<String, Object> body = new HashMap<>();
+
+        if(OPENAI_API_KEY.isEmpty()){
+            throw new Exception("OPENAI_API_KEY is empty - please set your OpenAI Api key to use analyzer!");
+        }
+
         body.put("model", OPENAI_MODEL);
         body.put("messages", messages);  // Changed from "input" to "messages"
         body.put("max_tokens", MAX_TOKENS);
