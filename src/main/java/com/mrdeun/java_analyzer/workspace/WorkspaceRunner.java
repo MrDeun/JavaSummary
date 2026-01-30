@@ -60,7 +60,7 @@ public class WorkspaceRunner {
                 - Method: %s
                 - Content: %s
                 Rules:
-                - Analyze ONLY this method
+                - Analyze ONLY this method if provided, else analyze all methods
                 - Ignore other methods unless they are called by it
                 - Never change the target
                 """, cli.targetClass, cli.targetMethod != null ? cli.targetMethod : "\"\"", content);

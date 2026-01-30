@@ -1,7 +1,5 @@
 package com.mrdeun.java_analyzer.example;
 
-import com.mrdeun.java_analyzer.example.Bar;
-
 public class Foo {
     public void singleClass() {
         System.out.println("Hello, " + new Bar().increment());

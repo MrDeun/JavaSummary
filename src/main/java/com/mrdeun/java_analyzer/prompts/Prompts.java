@@ -43,7 +43,9 @@ public class Prompts {
                         Return ONLY a valid JSON array of class names, nothing else.
                         Do not include any explanatory text, markdown formatting, or code blocks.
                         Return class names that are required to call method that is asked for.
-
+                        If there are no import lines for missing classes, 
+                        concluded that missing class is part of the same package.
+                        ALWAYS retunr fully qualifed name of the class.
                         Example response format:
                         ["com.example.MyClass", "com.example.AnotherClass"]
 
